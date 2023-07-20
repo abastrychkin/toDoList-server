@@ -10,7 +10,6 @@ module.exports = function(app, db) {
         res.send(dbTasks);
     });
 
-
     app.post('/todolist-server/add',async (req, res) => {
         elem = req.fields;
         elem.done = false
@@ -20,13 +19,11 @@ module.exports = function(app, db) {
         res.send("OK")
     })
 
-
     app.post('/todolist-server/:taskId/toggle-done', async (req, res) => {
         const taskId = req.params.taskId;
         const objectTaskId = new ObjectId(taskId);
 
-        let taskArray = await tasksDbCollection.find({ "_id" : objectTaskId }).toArray();
-        let task = taskArray[0];
+        let task = await getTaskById(tasksDbCollection, objectTaskId);
     
         const newDoneValue = !task.done;
 
@@ -35,7 +32,15 @@ module.exports = function(app, db) {
             { $set: { "done" : newDoneValue } 
         });
         
-        res.send("OK");
+        let changedTask = await getTaskById(tasksDbCollection, objectTaskId);
+        
+        res.send(changedTask);
     })
 
 };
+
+async function getTaskById(tasksDbCollection, objectTaskId) {
+    let taskArray = await tasksDbCollection.find({ "_id": objectTaskId }).toArray();
+    let task = taskArray[0];
+    return task;
+}
